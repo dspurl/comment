@@ -27,9 +27,9 @@ php artisan migrate
 ![](/image/2.png)
 #### 七、 进入后台，为管理员分配权限
 #### 八、 使用评价插件，如这是第一个插件，可直接按以下步骤替换目标文件即可，如安装有其它插件，可能存在修改同一文件的可能，请进行文件比对进行手动修改
-- `coupon/example/admin/Detail.vue`->`admin/src/views/Indent/components/Detail.vue`
-- `coupon/example/api/Admin/IndentController.php`->`api/app/Http/Controllers/v1/Admin/IndentController.php`
-- `coupon/example/api/Element/GoodIndentController.php`->`api/app/Http/Controllers/v1/Element/GoodIndentController.php`
+- `comment/example/admin/list.vue`->`admin/src/views/Indent/list.vue`
+- `comment/example/api/Element/GoodIndentController.php`->`api/app/Http/Controllers/v1/Element/GoodIndentController.php`
+- `comment/example/api/Models/GoodIndentCommodity.php`->`api/app/Http/Controllers/v1/Models/GoodIndentCommodity.php`
 #### 九、 测试评价、后台对评价进行回复、商品详情页是否显示对应的评价内容，如果功能都能正常使用，则说明你的插件安装成功
 ## 如何更新插件
 - 首先请备份项目，升级可能产生问题（如自行修改了涉及到升级的文件、下载的文件不全等问题）
