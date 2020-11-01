@@ -30,6 +30,9 @@ php artisan migrate
 - `comment/example/admin/list.vue`->`admin/src/views/Indent/list.vue`
 - `comment/example/api/Element/GoodIndentController.php`->`api/app/Http/Controllers/v1/Element/GoodIndentController.php`
 - `comment/example/api/Models/GoodIndentCommodity.php`->`api/app/Http/Controllers/v1/Models/GoodIndentCommodity.php`
+- `comment/example/api/trade/order/order.vue`->`trade/Dsshop/pages/order/order.vue`
+- `comment/example/api/trade/product/product.vue`->`trade/Dsshop/pages/product/product.vue`
+- `comment/example/api/trade/user/user.vue`->`trade/Dsshop/pages/user/user.vue`
 #### 九、 测试评价、后台对评价进行回复、商品详情页是否显示对应的评价内容，如果功能都能正常使用，则说明你的插件安装成功
 ## 如何更新插件
 - 首先请备份项目，升级可能产生问题（如自行修改了涉及到升级的文件、下载的文件不全等问题）
