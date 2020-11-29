@@ -81,7 +81,7 @@ class CommentController extends Controller
                 $Comment->anonymity = $data['anonymity'];
                 $Comment->save();
                 if($data['resources']){
-                    foreach ($data['resources'] as $id =>$img){
+                    foreach ($data['resources'] as $img){
                         $Resource=new Resource();
                         $Resource->type = Resource::RESOURCE_TYPE_IMG;
                         $Resource->depict = 'comment_'.$Comment->id;
