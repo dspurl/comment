@@ -10,7 +10,7 @@
 				{{item.text}}
 			</view>
 		</view>
-		<swiper :current="tabCurrentIndex" class="swiper-box" duration="300" @change="changeTab">
+		<swiper :current="tabCurrentIndex" class="swiper-box" duration="300">
 			<swiper-item class="tab-content" v-for="(tabItem,tabIndex) in navList" :key="tabIndex">
 				<scroll-view 
 					class="list-scroll-content" 
@@ -39,7 +39,7 @@
 								class="goods-box-single"
 								v-for="(goodsItem, goodsIndex) in item.goods_list" :key="goodsIndex"
 							>
-								<image class="goods-img" :src="goodsItem.img" mode="aspectFill" lazy-load></image>
+								<image class="goods-img" :src="goodsItem.img | smallImage" mode="aspectFill" lazy-load></image>
 								<view class="right">
 									<text class="title clamp">{{goodsItem.name}}</text>
 									<text class="attr-box clamp">{{goodsItem.specification}}</text>
@@ -168,8 +168,7 @@
 				let index = this.tabCurrentIndex;
 				let navItem = this.navList[index];
 				let state = navItem.state;
-				if(source === 'tabChange' && navItem.loaded === true){
-					//tab切换只有第一次需要加载数据
+				if(navItem.loaded === true){
 					return;
 				}
 				
@@ -239,12 +238,6 @@
 				
 			}, 
 
-			//swiper 切换
-			changeTab(e){
-				this.tabCurrentIndex = e.target.current
-				this.loadData('tabChange')
-				this.page = 1
-			},
 			//顶部tab点击
 			tabClick(index){
 				this.tabCurrentIndex = index
@@ -267,12 +260,6 @@
 						}
 				    }
 				})
-				setTimeout(()=>{
-					Indents.deleteSubmit(that.navList[that.tabCurrentIndex].orderList[index].id,function(res){
-						that.navList[that.tabCurrentIndex].orderList.splice(index, 1);
-					})
-					uni.hideLoading();
-				}, 600)
 			},
 			//去支付
 			goPay(item){
@@ -365,6 +352,7 @@
 					// 	orderList: []
 					// }
 				]
+				this.page = 1
 				this.loadData()
 			},
 			showModal(e) {
