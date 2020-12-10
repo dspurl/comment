@@ -42,7 +42,7 @@
 				</checkbox-group>
 			</view>
 			<view class="cu-form-group">
-				<textarea maxlength="-1" :disabled="data[ind].details!=null" @input="textareaAInput($event,ind)" placeholder="亲,您对这个商品满意吗？您的评价会帮助我们选择更好的商品哦~"></textarea>
+				<textarea maxlength="-1" :disabled="data[ind].details!=null" @input="textareaAInput($event,ind)" placeholder="亲,您对这个商品满意吗？您的评价会帮助我们提供更好的服务哦~"></textarea>
 			</view>
 		</view>
 		<view class="height45"></view>
@@ -111,11 +111,11 @@
 					sizeType: ['compressed'],
 					success: (res) => {
 						uni.uploadFile({
-						  url: uni.getStorageSync('applyDsshopSecret').host + 'uploadPictures',
+						  url: that.configURL.BaseURL + 'uploadPictures',
 						  filePath: res.tempFilePaths[0],
 						  name: 'file',
 						  header: {
-							'apply-secret': uni.getStorageSync('applyDsshopSecret').secret,
+							'apply-secret': that.configURL.secret,
 							'Authorization': 'Bearer ' + uni.getStorageSync('dsshopApplytoken')
 						  },
 						  formData: {
@@ -145,8 +145,8 @@
 			DelImg(ind,index) {
 				uni.showModal({
 					content: '确定要删除该图片？',
-					cancelText: '再看看',
-					confirmText: '再见',
+					cancelText: '取消',
+					confirmText: '确定',
 					success: res => {
 						if (res.confirm) {
 							this.data[ind].resources.splice(index, 1)

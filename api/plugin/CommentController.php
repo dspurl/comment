@@ -81,7 +81,7 @@ class CommentController extends Controller
                 $Comment->anonymity = $data['anonymity'];
                 $Comment->save();
                 if($data['resources']){
-                    foreach ($data['resources'] as $id =>$img){
+                    foreach ($data['resources'] as $rid =>$img){
                         $Resource=new Resource();
                         $Resource->type = Resource::RESOURCE_TYPE_IMG;
                         $Resource->depict = 'comment_'.$Comment->id;
@@ -157,7 +157,7 @@ class CommentController extends Controller
         return resReturn(1,$GoodIndentCommodity);
     }
 
-    /**
+  /**
      * 商品评价
      * @param $id
      * @param Request $request
@@ -178,16 +178,18 @@ class CommentController extends Controller
             }]);
         }])->orderBy('created_at','DESC')->paginate($limit);
         foreach ($paginate as $id=>$p){
-            if($p->Comment->anonymity == Comment::COMMENT_ANONYMITY_YES){
+            if(isset($p->Comment->anonymity) && $p->Comment->anonymity == Comment::COMMENT_ANONYMITY_YES){
                 $p->Comment->name = '匿名用户';
             }else{
-                if($p->Comment->User->nickname){    //有昵称则为昵称
+                if(isset($p->Comment->User->nickname)){    //有昵称则为昵称
                     $p->Comment->name = mb_substr($p->Comment->User->nickname, 0, 1,'utf-8').'**'.mb_substr($p->Comment->User->nickname,-1, 1,'utf-8');
-                }else{  //手机号
+                }else if(isset($p->Comment->User->cellphone)){  //手机号
                     $p->Comment->name = mb_substr($p->Comment->User->cellphone, 0, 3,'utf-8').'**'.mb_substr($p->Comment->User->cellphone,-3,3,'utf-8');
                 }
             }
-            $p->Comment->portrait=$p->Comment->User->portrait;
+            if(isset($p->Comment->User->portrait)) {
+                $p->Comment->portrait = $p->Comment->User->portrait;
+            }
             unset($p->Comment->User);
         }
         return resReturn(1,$paginate);
