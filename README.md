@@ -1,7 +1,8 @@
-#优惠券
+#评价
 ## 说明
 - 该插件依赖dsshop项目，而非通用插件
 - 支持版本:dshop v1.1.8及以上
+- 已同步版本：dsshop v1.3.2
 
 ## 功能介绍
 - 支持对商品进行评价，平台可通过后台进行回复
@@ -30,6 +31,9 @@ php artisan migrate
 - `comment/example/admin/list.vue`->`admin/src/views/Indent/list.vue`
 - `comment/example/api/Element/GoodIndentController.php`->`api/app/Http/Controllers/v1/Element/GoodIndentController.php`
 - `comment/example/api/Models/GoodIndentCommodity.php`->`api/app/Http/Controllers/v1/Models/GoodIndentCommodity.php`
+- `comment/example/api/trade/order/order.vue`->`trade/Dsshop/pages/order/order.vue`
+- `comment/example/api/trade/product/product.vue`->`trade/Dsshop/pages/product/product.vue`
+- `comment/example/api/trade/user/user.vue`->`trade/Dsshop/pages/user/user.vue`
 #### 九、 测试评价、后台对评价进行回复、商品详情页是否显示对应的评价内容，如果功能都能正常使用，则说明你的插件安装成功
 ## 如何更新插件
 - 首先请备份项目，升级可能产生问题（如自行修改了涉及到升级的文件、下载的文件不全等问题）

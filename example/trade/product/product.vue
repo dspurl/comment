@@ -7,7 +7,7 @@
 				<swiper-item class="swiper-item" v-for="(item, index) in resources_many" :key="index" @click="showVideo">
 					<view v-if="item.type === 'img'" class="image-wrapper" @click="imgList()"><image :src="item.img" class="loaded" mode="aspectFill" lazy-load></image></view>
 					<view v-else class="image-wrapper">
-						<image :src="poster" lazy-load class="loaded" mode="aspectFill" lazy-load></image>
+						<image :src="poster" lazy-load class="loaded" mode="aspectFill"></image>
 					</view>
 					<view v-if="item.type === 'video'" class="playVideo text-white cuIcon-videofill"></view>
 				</swiper-item>
@@ -50,19 +50,25 @@
 		</view> -->
 
 		<view class="c-list">
-			<view v-if="specificationDefaultDisplay" class="c-row b-b" @click="toggleSpec(true)">
-				<text class="tit">购买类型</text>
-				<view class="con">
-					<text class="selected-text">{{ specificationDefaultDisplay }}</text>
+			<block v-if="getList.is_delete || getList.is_show !== 1">
+				<view v-if="specificationDefaultDisplay" class="c-row b-b">
+					<text class="tit">购买类型</text>
+					<view class="con">
+						<text class="selected-text">{{ specificationDefaultDisplay }}</text>
+					</view>
+					<text class="yticon icon-you"></text>
 				</view>
-				<text class="yticon icon-you"></text>
-			</view>
+			</block>
+			<block v-else>
+				<view v-if="specificationDefaultDisplay" class="c-row b-b" @click="toggleSpec(true)">
+					<text class="tit">购买类型</text>
+					<view class="con">
+						<text class="selected-text">{{ specificationDefaultDisplay }}</text>
+					</view>
+					<text class="yticon icon-you"></text>
+				</view>
+			</block>
 			<!-- <view class="c-row b-b">
-				<text class="tit">优惠券</text>
-				<text class="con t-r red">领取优惠券</text>
-				<text class="yticon icon-you"></text>
-			</view>
-			<view class="c-row b-b">
 				<text class="tit">促销活动</text>
 				<view class="con-list">
 					<text>新人首单送20元无门槛代金券</text>
@@ -103,12 +109,7 @@
 
 		<view class="detail-desc">
 			<view class="d-header"><text>图文详情</text></view>
-			<!-- #ifdef MP-ALIPAY -->
-				<rich-text :nodes="getList.details"></rich-text>
-			<!-- #endif -->
-			<!-- #ifndef MP-ALIPAY -->
-				<rich-text :nodes="getList.details | formatRichText"></rich-text>
-			<!-- #endif -->
+			<u-parse :content="getList.details" lazyLoad/>
 		</view>
 
 		<!-- 底部操作菜单 -->
@@ -125,8 +126,11 @@
 				<text class="yticon icon-shoucang"></text>
 				<text>收藏</text>
 			</view>
-
-			<view class="action-btn-group">
+			<view class="action-btn-group" v-if="getList.is_delete  || getList.is_show !== 1">
+				<button type="primary" class=" action-btn no-border buy-now-btn" disabled>立即购买</button>
+				<button type="primary" class=" action-btn no-border add-cart-btn" disabled>加入购物车</button>
+			</view>
+			<view class="action-btn-group" v-else>
 				<button type="primary" class=" action-btn no-border buy-now-btn" @click="toggleSpec(true)">立即购买</button>
 				<button type="primary" class=" action-btn no-border add-cart-btn" @click="toggleSpec(false)">加入购物车</button>
 			</view>
@@ -137,13 +141,15 @@
 			<view class="mask"></view>
 			<view class="layer attr-content" @click.stop="stopPrevent"><sku :getList="getList" :buy="buy" @toggleSpec="toggleSpec" @purchasePattern="purchasePattern"></sku></view>
 		</view>
-
+		<!-- 已删除或还未发布-->
+		<view v-if="getList.is_delete || getList.is_show !== 1" class="sold-out padding-sm">商品已经下架了~</view>
 		<!-- 分享 -->
 		<!-- <share ref="share" :contentHeight="580" :shareList="shareList"></share> -->
 	</view>
 </template>
 
 <script>
+import uParse from '@/components/gaoyia-parse/parse.vue'
 import Good from '../../api/good';
 import share from '@/components/share';
 import { param2Data } from '@/components/sku/sku2param';
@@ -158,7 +164,8 @@ import {
 export default {
 	components: {
 		share,
-		sku
+		sku,
+		uParse
 	},
 	data() {
 		return {
@@ -166,7 +173,10 @@ export default {
 			id: '',
 			specClass: 'none',
 			specificationDefaultDisplay: '', // 规格默认显示
-			getList: {},
+			getList:{
+				is_delete:0,
+				is_show:1
+			},
 			shoppingAttributes: [], //购物属性
 			favorite: false,
 			shareList: [],
@@ -214,9 +224,6 @@ export default {
 					})
 				}
 				that.getList = res
-				// #ifdef MP-ALIPAY
-				that.getList.details = that.htmlToImageJson(that.getList.details)
-				// #endif
 				if (that.hasLogin){
 					that.browse()
 				}
@@ -319,27 +326,6 @@ export default {
 			this.specificationDefaultDisplay = data;
 		},
 		stopPrevent() {},
-		// HTML转Json图片
-		htmlToImageJson(html) {
-			let img = html.match(/<img[^>]*>/gi)
-			let arr = []
-			if(img){
-				for (let i = 0; i < img.length; i++) {
-				 let src = img[i].match(/src=[\'\"]?([^\'\"]*)[\'\"]?/i)
-				 //获取图片地址
-				 if(src[1]){
-					arr.push({
-						name: 'img',
-						attrs: {
-							style: 'max-width:100%;height:auto;display:inline-block;margin:10rpx auto;vertical-align:top;margin-top:-4px',
-							src: src[1]
-						}
-				  })
-				 }
-				}
-			}
-			return arr
-		},
 		// 获取评价列表
 		goodEvaluate(){
 			const that = this
@@ -351,35 +337,6 @@ export default {
 				that.commentList = res.data
 				that.commentTotal = res.total
 			})
-		}
-	},
-	filters: {
-		/**
-		 * 处理富文本里的图片宽度自适应
-		 * 1.去掉img标签里的style、width、height属性
-		 * 2.img标签添加style属性：max-width:100%;height:auto
-		 * 3.修改所有style里的width属性为max-width:100%
-		 * 4.去掉<br/>标签
-		 * @param html
-		 * @returns {void|string|*}
-		 */
-		formatRichText(html) {
-			//控制小程序中图片大小
-			if (html) {
-				let newContent = html.replace(/<img[^>]*>/gi, function(match, capture) {
-					match = match.replace(/style="[^"]+"/gi, '').replace(/style='[^']+'/gi, '');
-					match = match.replace(/width="[^"]+"/gi, '').replace(/width='[^']+'/gi, '');
-					match = match.replace(/height="[^"]+"/gi, '').replace(/height='[^']+'/gi, '');
-					return match;
-				});
-				newContent = newContent.replace(/style="[^"]+"/gi, function(match, capture) {
-					match = match.replace(/width:[^;]+;/gi, 'max-width:100%;').replace(/width:[^;]+;/gi, 'max-width:100%;');
-					return match;
-				});
-				newContent = newContent.replace(/<br[^>]*\/>/gi, '');
-				newContent = newContent.replace(/\<img/gi, '<img style="vertical-align:top;max-width:100%;height:auto;display:inline-block;margin:10rpx auto;"');
-				return newContent;
-			}
 		}
 	}
 };
@@ -641,7 +598,6 @@ page {
 			padding: 0 20upx;
 			background: #fff;
 			position: relative;
-			z-index: 1;
 		}
 		&:after {
 			position: absolute;
@@ -918,5 +874,15 @@ page {
 	top:300upx;
 	opacity: 1;
 	font-size: 120upx;
+}
+.sold-out{
+	text-align: center;
+	position: fixed;
+	left:0;
+	bottom: 140upx;
+	width: 100%;
+	background-color: #999999;
+	color: #FFFFFF;
+	z-index: 3;
 }
 </style>
