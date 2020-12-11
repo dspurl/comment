@@ -14,7 +14,7 @@
 								<view class="text-gray text-sm flex justify-between">
 									{{item.comment.created_at.split(' ')[0]}}
 								</view>
-								<view class="text-gray text-sm">
+								<view v-if="item.good_sku" class="text-gray text-sm">
 									<span v-for="(ite,ind) in item.good_sku.product_sku" :key="ind" class="padding-right-xs">
 										{{ite.key}}:{{ite.value}}
 									</span>
