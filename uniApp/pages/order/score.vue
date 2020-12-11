@@ -177,7 +177,8 @@
 				Comment.createSubmit(this.id,data,function(res){
 					that.$api.msg(`评价成功`);
 					setTimeout(()=>{
-						uni.navigateBack()
+							that.$api.prePage().refreshOderList();
+							uni.navigateBack();
 					}, 800)
 				})
 			}
