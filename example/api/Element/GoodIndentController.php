@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\v1\Element;
 
 use App\Code;
+use App\common\RedisService;
 use App\Http\Requests\v1\SubmitGoodIndentRequest;
 use App\Models\v1\Good;
 use App\Models\v1\GoodLocation;
 use App\Models\v1\User;
-use Illuminate\Support\Facades\Redis;
 use App\common\RedisLock;
 use App\Models\v1\GoodIndent;
 use App\Models\v1\GoodIndentCommodity;
 use App\Models\v1\GoodSku;
+use App\Notifications\Common;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class GoodIndentController extends Controller
      */
     public function store(SubmitGoodIndentRequest $request)
     {
-        $redis = Redis::connection('default');
+        $redis = new RedisService();
         $lock=RedisLock::lock($redis,'goodIndent');
         if($lock){
             $return=DB::transaction(function ()use($request){
@@ -107,6 +108,7 @@ class GoodIndentController extends Controller
                 $GoodLocation->longitude = $request->address['longitude'];
                 $GoodLocation->house = $request->address['house'];
                 $GoodLocation->save();
+
                 return array(1,$GoodIndent->id);
             }, 5);
             RedisLock::unlock($redis,'goodIndent');
@@ -126,17 +128,25 @@ class GoodIndentController extends Controller
         foreach ($request->all() as $id=> $all){
             if($all['good_sku_id']){ //sku商品
                 $GoodSku=GoodSku::find($all['good_sku_id']);
-                if($GoodSku->inventory<$all['number']){ //库存不足时
+                if($GoodSku->is_delete == GoodSku::GOOD_SKU_DELETE_YES){
                     $return[$id]['invalid']= true;  //标记为失效
                 }else{
-                    $return[$id]['invalid']= false;
+                    if($GoodSku->inventory<$all['number']){ //库存不足时
+                        $return[$id]['invalid']= true;  //标记为失效
+                    }else{
+                        $return[$id]['invalid']= false;
+                    }
                 }
             }else{
                 $Good=Good::find($all['good_id']);
-                if($Good->inventory<$all['number']){
+                if($Good->is_delete == Good::GOOD_DELETE_YES){
                     $return[$id]['invalid']= true;  //标记为失效
-                }else{
-                    $return[$id]['invalid']= false;
+                }else {
+                    if($Good->inventory<$all['number']){
+                        $return[$id]['invalid']= true;  //标记为失效
+                    }else{
+                        $return[$id]['invalid']= false;
+                    }
                 }
             }
         }
@@ -210,11 +220,54 @@ class GoodIndentController extends Controller
      * @return string
      */
     public function receipt($id){
-        $GoodIndent=GoodIndent::find($id);
-        $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_EVALUATE;
-        $GoodIndent->confirm_time = Carbon::now()->toDateTimeString();
-        $GoodIndent->save();
-        return resReturn(1,'收货成功');
+        $return=DB::transaction(function ()use($id){
+            $GoodIndent=GoodIndent::with(['goodsList'])->find($id);
+            $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_EVALUATE;
+            $GoodIndent->confirm_time = Carbon::now()->toDateTimeString();
+            $GoodIndent->save();
+            $Common=(new Common)->orderConfirmReceipt([
+                'id'=>$GoodIndent->id,  //订单ID
+                'identification'=>$GoodIndent->identification,  //订单号
+                'name'=> $GoodIndent->goodsList[0]->name.(count($GoodIndent->goodsList)>1 ? '等多件': ''),    //商品名称
+                'created_at'=>$GoodIndent->created_at,   // 下单时间
+                'shipping_time'=>$GoodIndent->shipping_time,    //发货时间
+                'confirm_time'=>$GoodIndent->confirm_time,    //确认收货时间
+                'template'=>'order_confirm_receipt',   //通知模板标识
+                'user_id'=>$GoodIndent->User->id    //用户ID
+            ]);
+            if($Common['result']== 'ok'){
+                $AdminCommon=(new Common)->adminOrderCompletion([
+                    'id'=>$GoodIndent->id,  //订单ID
+                    'identification'=>$GoodIndent->identification,  //订单号
+                    'name'=> $GoodIndent->goodsList[0]->name.(count($GoodIndent->goodsList)>1 ? '等多件': ''),    //商品名称
+                    'confirm_time'=>$GoodIndent->confirm_time,    //确认收货时间
+                    'template'=>'admin_order_completion',   //通知模板标识
+                ]);
+                if($AdminCommon['result']== 'ok'){
+                    $Common=(new Common)->orderEvaluate([
+                        'id'=>$GoodIndent->id,  //订单ID
+                        'identification'=>$GoodIndent->identification,  //订单号
+                        'confirm_time'=>$GoodIndent->confirm_time,    //确认收货时间
+                        'template'=>'order_evaluate',   //通知模板标识
+                        'user_id'=>$GoodIndent->User->id    //用户ID
+                    ]);
+                    if($AdminCommon['result']== 'ok'){
+                        return array(1,'收货成功');
+                    }else{
+                        return array($Common['msg'],Code::CODE_PARAMETER_WRONG);
+                    }
+                }else{
+                    return array($AdminCommon['msg'],Code::CODE_PARAMETER_WRONG);
+                }
+            }else{
+                return array($Common['msg'],Code::CODE_PARAMETER_WRONG);
+            }
+        });
+        if($return[0] == 1){
+            return resReturn(1,$return[1]);
+        }else{
+            return resReturn(0,$return[0],$return[1]);
+        }
     }
 
     public function destroy($id){
