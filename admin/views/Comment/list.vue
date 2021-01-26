@@ -3,7 +3,7 @@
     <div class="filter-container">
       <el-form :inline="true" :model="listQuery" class="demo-form-inline">
         <el-form-item label="评价类型ID">
-          <el-input v-model="listQuery.model_id" placeholder="评价类型ID" @keyup.enter.native="handleFilter" clearable/>
+          <el-input v-model="listQuery.model_id" placeholder="评价类型ID" clearable @keyup.enter.native="handleFilter"/>
         </el-form-item>
         <el-form-item label="评价类型">
           <el-select v-model="listQuery.model_type" placeholder="类型" clearable>
