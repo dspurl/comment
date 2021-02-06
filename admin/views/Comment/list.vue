@@ -24,18 +24,19 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;">
-      <el-table-column label="编号" prop="id" align="center" width="80">
+      style="width: 100%;"
+      @sort-change="sortChange">
+      <el-table-column label="编号" sortable="custom" prop="id" align="center" width="80">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="评价类型">
+      <el-table-column label="评价类型" sortable="custom" prop="model_type">
         <template slot-scope="scope">
           <div>{{ scope.row.model_type_show }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="类型ID">
+      <el-table-column label="类型ID" sortable="custom" prop="model_id">
         <template slot-scope="scope">
           <div>{{ scope.row.model_id }}</div>
         </template>
@@ -56,32 +57,38 @@
           <div v-if="scope.row.reply" style="color: #999999;">回复：{{ scope.row.reply.details }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="状态" align="center" width="80">
+      <el-table-column label="状态" align="center" width="80" sortable="custom" prop="state">
         <template slot-scope="scope">
           <span>{{ scope.row.state }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="创始时间" align="center" prop="goods_sn">
+      <el-table-column label="创始时间" align="center" sortable="custom" prop="created_at">
         <template slot-scope="scope">
           <span>{{ scope.row.created_at }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" class-name="small-padding fixed-width" width="250" fixed="right">
+      <el-table-column label="操作" class-name="small-padding fixed-width" width="120" fixed="right">
         <template slot-scope="scope">
-          <el-popover
-            v-permission="$store.jurisdiction.EditComment"
-            v-if="scope.row.state === '待审核'"
-            placement="top"
-            width="160">
-            <p>审核是否通过？</p>
-            <div style="text-align: right; margin: 0">
-              <el-button size="mini" type="text" @click="setAudit(scope.row, 2)">不通过</el-button>
-              <el-button type="primary" size="mini" @click="setAudit(scope.row, 1)">通过</el-button>
-            </div>
-            <el-button slot="reference" type="warning" size="mini">审核</el-button>
-          </el-popover>
-          <el-button v-permission="$store.jurisdiction.EditComment" v-if="!scope.row.reply" type="primary" size="mini" @click="handleReply(scope.row)">回复</el-button>
-          <el-button v-permission="$store.jurisdiction.DeleteComment" type="danger" size="mini" @click="handleDelete(scope.row)">删除</el-button>
+          <el-tooltip class="item" effect="dark" content="审核" placement="top-start">
+            <el-popover
+              v-permission="$store.jurisdiction.CommentEdit"
+              v-if="scope.row.state === '待审核'"
+              placement="top"
+              width="160">
+              <p>审核是否通过？</p>
+              <div style="text-align: right; margin: 0">
+                <el-button size="mini" type="text" @click="setAudit(scope.row, 2)">不通过</el-button>
+                <el-button type="primary" size="mini" @click="setAudit(scope.row, 1)">通过</el-button>
+              </div>
+              <el-button slot="reference" :loading="formLoading" type="warning" icon="el-icon-view" circle/>
+            </el-popover>
+          </el-tooltip>
+          <el-tooltip v-permission="$store.jurisdiction.CommentEdit" v-if="!scope.row.reply" class="item" effect="dark" content="回复" placement="top-start">
+            <el-button :loading="formLoading" type="primary" icon="el-icon-chat-line-square" circle @click="handleReply(scope.row)"/>
+          </el-tooltip>
+          <el-tooltip v-permission="$store.jurisdiction.CommentDestroy" class="item" effect="dark" content="删除" placement="top-start">
+            <el-button :loading="formLoading" type="danger" icon="el-icon-delete" circle @click="handleDelete(scope.row)"/>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
@@ -101,7 +108,7 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="setReply">确 定</el-button>
+        <el-button :loading="formLoading" type="primary" @click="setReply">确 定</el-button>
       </span>
     </el-dialog>
     <!--分页-->
@@ -167,7 +174,7 @@
 </style>
 
 <script>
-import { getList, setDelete, createSubmit, updateSubmit } from '@/api/comment'
+import { getList, destroy, create, edit } from '@/api/comment'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -175,6 +182,7 @@ export default {
   components: { Pagination },
   data() {
     return {
+      formLoading: false,
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() < Date.now() - 8.64e7
@@ -230,23 +238,36 @@ export default {
     handleFilter() {
       this.getList()
     },
+    sortChange(data) {
+      const { prop, order } = data
+      if (order === 'ascending') {
+        this.listQuery.sort = '+' + prop
+      } else {
+        this.listQuery.sort = '-' + prop
+      }
+      this.handleFilter()
+    },
     handleDelete(row) { // 删除
-      var title = '删除后，评价和回复信息都将删除?'
-      var win = '删除成功'
+      const title = '删除后，评价和回复信息都将删除?'
+      const win = '删除成功'
       this.$confirm(title, this.$t('hint.hint'), {
         confirmButtonText: this.$t('usuel.confirm'),
         cancelButtonText: this.$t('usuel.cancel'),
         type: 'warning'
       }).then(() => {
-        setDelete(row.id, row).then(() => {
+        this.formLoading = true
+        destroy(row.id).then(() => {
           this.getList()
           this.dialogFormVisible = false
+          this.formLoading = false
           this.$notify({
             title: this.$t('hint.succeed'),
             message: win,
             type: 'success',
             duration: 2000
           })
+        }).catch(() => {
+          this.formLoading = false
         })
       }).catch(() => {
       })
@@ -258,34 +279,44 @@ export default {
       this.dialogVisible = true
     },
     setReply() { // 回复
+      this.formLoading = true
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           this.dialogVisible = false
-          createSubmit(this.ruleForm).then(() => {
+          create(this.ruleForm).then(() => {
             this.getList()
             this.dialogFormVisible = false
+            this.formLoading = false
             this.$notify({
               title: this.$t('hint.succeed'),
               message: '回复成功',
               type: 'success',
               duration: 2000
             })
+          }).catch(() => {
+            this.formLoading = false
           })
+        } else {
+          this.formLoading = false
         }
       })
     },
     // 审核
     setAudit(row, result) {
       this.temp = row
-      updateSubmit(result, this.temp).then(() => {
+      this.formLoading = true
+      edit(result, this.temp).then(() => {
         this.getList()
         this.dialogFormVisible = false
+        this.formLoading = false
         this.$notify({
           title: this.$t('hint.succeed'),
           message: '操作成功',
           type: 'success',
           duration: 2000
         })
+      }).catch(() => {
+        this.formLoading = false
       })
     }
   }

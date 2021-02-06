@@ -81,7 +81,7 @@
 			// 获取商品列表
 			async loadData() {
 				const that = this
-				Comment.goodIndentCommodity(this.id,function(res){
+				Comment.detail(this.id,function(res){
 					that.commodity = res
 					res.forEach((item,index)=>{
 						that.data[index]={
@@ -174,7 +174,7 @@
 						return;
 					}
 				}
-				Comment.createSubmit(this.id,data,function(res){
+				Comment.create(this.id,data,function(res){
 					that.$api.msg(`评价成功`);
 					setTimeout(()=>{
 							that.$api.prePage().refreshOderList();

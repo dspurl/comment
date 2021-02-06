@@ -70,10 +70,11 @@
 			//获取列表
 			loadData(type){
 				const that = this
-				Comment.goodEvaluate({
+				Comment.good({
 					limit: 8,
 					page: this.page,
-					good_id:that.id
+					good_id:that.id,
+					sort:'-created_at'
 				},function(res){
 					that.data = that.data.concat(res.data)
 					if (res.last_page > that.page){

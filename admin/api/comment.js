@@ -8,11 +8,8 @@ export function getList(query) {
   })
 }
 
-export function createSubmit(data) {
-  data = Qs.parse({
-    data
-  })
-  data = data.data
+export function create(data) {
+  data = Qs.parse(data)
   return request({
     url: 'comment',
     method: 'POST',
@@ -20,27 +17,19 @@ export function createSubmit(data) {
   })
 }
 
-export function updateSubmit(id, data) {
-  data = Qs.parse({
-    data
-  })
-  data = data.data
+export function edit(id, data) {
+  data = Qs.parse(data)
   return request({
     url: 'comment/' + id,
-    method: 'PUT',
+    method: 'POST',
     data
   })
 }
 
-export function setDelete(id, data) {
-  data = Qs.parse({
-    data
-  })
-  data = data.data
+export function destroy(id) {
   return request({
-    url: 'comment/' + id,
-    method: 'DELETE',
-    data
+    url: 'comment/destroy/' + id,
+    method: 'POST'
   })
 }
 
