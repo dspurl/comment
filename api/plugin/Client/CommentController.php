@@ -59,9 +59,6 @@ class CommentController extends Controller
                         $Resource->save();
                     }
                 }
-                $GoodIndent = GoodIndent::find($id);
-                $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_ACCOMPLISH;
-                $GoodIndent->save();
             }
             return array(1);
         }, 5);

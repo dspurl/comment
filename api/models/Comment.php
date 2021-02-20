@@ -104,4 +104,11 @@ class Comment extends Model
     public function User(){
         return $this->hasOne(User::class,'id','user_id');
     }
+
+    /**
+     * 订单商品
+     */
+    public function GoodIndentCommodity(){
+        return $this->hasOne(GoodIndentCommodity::class,'id','model_id');
+    }
 }
