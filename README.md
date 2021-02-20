@@ -61,6 +61,48 @@ public function quantity()
 }
 ```
 
+```vue
+#trade\Dsshop\pages\user\user.vue
+<template>
+</template>
+<script>
+export default {
+    data() {
+		return {
+			quantity: {
+                all: 0,
+                obligation: 0,
+                waitdeliver: 0,
+                waitforreceiving: 0
+            },
+		};
+	},
+    onShow(){
+        if(this.hasLogin){
+            this.getUser()
+            this.browse()
+            this.noticeConut()
+            this.getQuantity()
+            this.getUserCouponCount()
+        } else {
+            this.browseList = []
+            this.user = {}
+            this.noticeNumber = null
+            this.quantity = {
+                all: 0,
+                obligation: 0,
+                waitdeliver: 0,
+                waitforreceiving: 0
+            }
+        }
+
+    },
+}
+</script>
+```
+
+
+
 ###### 添加待评价和评价按钮
 
 ```vue
