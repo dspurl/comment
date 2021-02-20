@@ -43,124 +43,10 @@ php artisan migrate
 
 ##### 开发指南
 
-###### 增加评价通知代码
-
-```php
-#api\app\Notifications\Common.php
-/**
-  * 订单评价提醒
-  * @param $parameter //传入的参数
-  * @return array
-*/
-public function orderEvaluate($parameter)
-{
-    $return = [
-        'result' => 'ok',
-        'msg' => '成功'
-    ];
-    $parameter = collect($parameter);
-    $verification = $this->verification($parameter, ['id', 'identification', 'confirm_time', 'template', 'user_id']);
-    if ($verification['result'] == 'error') {
-        return $verification;
-    }
-    $invoice = [
-        'type' => InvoicePaid::NOTIFICATION_TYPE_SYSTEM_MESSAGES,
-        'title' => '待评价提醒',
-        'list' => [
-            [
-                'keyword' => '订单编号',
-                'data' => $parameter['identification']
-            ],
-            [
-                'keyword' => '完成时间',
-                'data' => $parameter['confirm_time']
-            ]
-        ],
-        'remark' => '点击详情,您可以对订单进行评价',
-        'url' => '/pages/order/score?id=' . $parameter['id'],
-        'parameter' => $parameter,
-        'prefers' => ['database', 'wechat', 'mail']
-    ];
-    $user = User::find($parameter['user_id']);
-    $user->notify(new InvoicePaid($invoice));
-    return $return;
-}
-/**
-  * 用户评价通知
-  * @param $parameter    //传入的参数
-  * @return array
-*/
-public function adminOrderEvaluate($parameter){
-    $return = [
-        'result'=>'ok',
-        'msg'=>'成功'
-    ];
-    $parameter = collect($parameter);
-    $verification=$this->verification($parameter,['id','details','time','cellphone','template']);
-    if($verification['result'] == 'error'){
-        return $verification;
-    }
-    $invoice=[
-        'type'=> InvoicePaid::NOTIFICATION_TYPE_SYSTEM_MESSAGES,
-        'title'=>'收到新的评价消息',
-        'list'=>[
-            [
-                'keyword'=>'评价人',
-                'data'=>$parameter['cellphone']
-            ],
-            [
-                'keyword'=>'评价内容',
-                'data'=>$parameter['details']
-            ],
-            [
-                'keyword'=>'评价时间',
-                'data'=>$parameter['time']
-            ]
-        ],
-        'remark'=>'点击查看详细信息',
-        'url'=>'/tool/comment/commentList?model_id='.$parameter['id'],
-        'parameter'=>$parameter,
-        'admin'=>true,
-        'prefers'=>['wechat','mail']
-    ];
-    if(config('notification.account')){
-        $account=explode(',',config('notification.account'));
-        foreach ($account as $uid) {
-            $user = User::find($uid);
-            $invoice['parameter']['user_id']=$uid;
-            $user->notify(new InvoicePaid($invoice)); // 发送通知
-        }
-    }
-    return $return;
-}
-```
-
-
-
-###### 增加评价状态
-
-- 默认用户收货后，订单就已经结束，需要评价需要添加评价环节，示例代码=
+###### 增加评价统计代码
 
 ```php
 #api\app\Http\Controllers\v1\Client\GoodIndentController.php
-public function receipt($id)
-{
-    // $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_ACCOMPLISH;
-    $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_EVALUATE;
-    // return array(1, '收货成功');
-    $Common = (new Common)->orderEvaluate([
-        'id' => $GoodIndent->id,  //订单ID
-        'identification' => $GoodIndent->identification,  //订单号
-        'confirm_time' => $GoodIndent->confirm_time,    //确认收货时间
-        'template' => 'order_evaluate',   //通知模板标识
-        'user_id' => $GoodIndent->User->id    //用户ID
-    ]);
-    if ($AdminCommon['result'] == 'ok') {
-        return array(1, '收货成功');
-    } else {
-        return array($Common['msg'], Code::CODE_PARAMETER_WRONG);
-    }
-}
 public function quantity()
 {
     ...
@@ -174,8 +60,6 @@ public function quantity()
 	}
 }
 ```
-
-
 
 ###### 添加待评价和评价按钮
 
@@ -295,8 +179,50 @@ export default {
 }
 </script>
 ```
+###### 添加后台订单进度对评价的支持
 
-###### 添加商品评价记录
+```vue
+#admin\src\views\IndentManagement\Indent\components\Detail.vue
+<template>
+</template>
+<script>
+export default {
+    data() {
+		return {
+		};
+	},
+    methods: {
+		getList() {
+            case 5:
+            case 10:
+              this.order_progress = 4
+              break
+        }
+    }
+}
+</script>
+```
+###### 添加订单评价相关状态
+
+```php
+#\app\Models\v1\GoodIndent.php
+const GOOD_INDENT_STATE_EVALUATE = 4; //状态：待评价
+const GOOD_INDENT_STATE_HAVE_EVALUATION = 10; //状态：已评价
+public function getStateShowAttribute()
+{
+   ...
+	case static::GOOD_INDENT_STATE_REFUND_FAILURE:
+    	$return = '退款失败';
+    	break;
+    case static::GOOD_INDENT_STATE_EVALUATE:
+        $return = '待评价';
+        break;
+    case static::GOOD_INDENT_STATE_HAVE_EVALUATION:
+    	$return = '已评价';
+    	break;
+}
+```
+###### 添加商品评价关联
 
 ```php
 #app\Models\v1\GoodIndentCommodity.php
@@ -308,7 +234,7 @@ public function Comment(){
 }
 ```
 
-
+###### 添加商品评价记录
 
 ```vue
 #trade\Dsshop\pages\product\product.vue
