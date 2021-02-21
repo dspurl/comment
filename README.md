@@ -337,6 +337,23 @@ export default {
 </script>
 ```
 
+配置模板通知
+
+```php
+#api\config\notification.php
+'wechat'=>[ //微信公众号
+    ...
+    'order_evaluate'=>env('WECHAT_SUBSCRIPTION_INFORMATION_ORDER_EVALUATE',''),  //订单评价提醒
+    'admin_order_evaluate'=>env('WECHAT_SUBSCRIPTION_INFORMATION_ADMIN_ORDER_EVALUATE',''),  //用户评价通知
+    ],
+```
+
+```shell
+#.env
+WECHAT_SUBSCRIPTION_INFORMATION_ORDER_EVALUATE=
+WECHAT_SUBSCRIPTION_INFORMATION_ADMIN_ORDER_EVALUATE=
+```
+
 
 
 ## 如何更新插件
