@@ -148,20 +148,6 @@ export default {
 		};
 	},
     methods: {
-		//关闭订单后重新加载
-        refreshOderList(){
-            this.navList= [
-                ...
-                {
-                     state: 4,
-                     text: '待评价',
-                    loadingType: 'more',
-                    orderList: []
-                }
-            ]
-            this.page = 1
-            this.loadData()
-        },
         // 评价
         goScore(item){
             uni.navigateTo({
@@ -192,20 +178,6 @@ export default {
 <script>
 export default {
     methods: {
-		//关闭订单后重新加载
-        refreshOderList(){
-            this.navList= [
-                ...
-                {
-                     state: 4,
-                     text: '待评价',
-                    loadingType: 'more',
-                    orderList: []
-                }
-            ]
-            this.page = 1
-            this.loadData()
-        },
         // 评价
         goScore(item){
             uni.navigateTo({
@@ -248,8 +220,8 @@ export default {
 
 ```php
 #\app\Models\v1\GoodIndent.php
-const GOOD_INDENT_STATE_EVALUATE = 4; //状态：待评价
-const GOOD_INDENT_STATE_HAVE_EVALUATION = 10; //状态：已评价
+const GOOD_INDENT_STATE_EVALUATE = 10; //状态：待评价
+const GOOD_INDENT_STATE_HAVE_EVALUATION = 11; //状态：已评价
 public function getStateShowAttribute()
 {
    ...
