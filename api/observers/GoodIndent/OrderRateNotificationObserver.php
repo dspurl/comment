@@ -51,6 +51,10 @@ class OrderRateNotificationObserver
             ];
             $goodIndent = GoodIndent::find($goodIndent->id);
             $goodIndent->state = GoodIndent::GOOD_INDENT_STATE_EVALUATE;
+            if (config('comment.automaticEvaluateState')) {
+                $automaticEvaluate = config('comment.automaticEvaluate');
+                $goodIndent->evaluate_time = date('Y-m-d H:i:s', strtotime("+$automaticEvaluate day"));
+            }
             $goodIndent->save();
             $invoice = [
                 'type' => InvoicePaid::NOTIFICATION_TYPE_SYSTEM_MESSAGES,

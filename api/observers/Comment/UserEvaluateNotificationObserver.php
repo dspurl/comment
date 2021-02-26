@@ -6,6 +6,7 @@ use App\Models\v1\Comment;
 use App\Models\v1\GoodIndent;
 use App\Models\v1\User;
 use App\Notifications\InvoicePaid;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 /**
@@ -41,10 +42,11 @@ class UserEvaluateNotificationObserver
 
     public function created(Comment $comment)
     {
-        if(($this->execute || app()->runningInConsole())){
+        if(($this->execute)){
             $comment = Comment::with(['User', 'GoodIndentCommodity'])->find($comment->id);
             $GoodIndent = GoodIndent::find($comment->GoodIndentCommodity->good_indent_id);
             $GoodIndent->state = GoodIndent::GOOD_INDENT_STATE_HAVE_EVALUATION;
+            $GoodIndent->evaluate_time = Carbon::now()->toDateTimeString();
             $GoodIndent->save();
             $parameter = [
                 'id' => $comment->id,  //评价ID

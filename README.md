@@ -6,6 +6,7 @@
 
 ## 功能介绍
 - 支持对商品进行评价，平台可通过后台进行回复
+- 支持自动评价功能，默认收货12后天自动好评
 - 支持为同一订单多件商品进行评价
 - 商品详情页显示评价记录，默认显示2条，在评价列表显示全部，每次加载8条数据
 - 支持用户匿名评价
@@ -41,7 +42,34 @@ php artisan migrate
 - 用户评价后，管理员可以通过评价管理对用户的评价内容进行审核，审核通过的才会在前台展示
 - 管理员可以把用户评价的内容进行删除，删除后该条评价和回复都会被删除
 
+##### 运维指南
+
+- 插件提供`automatic:evaluate`命令来实现自动评价功能
+
+```php
+protected $commands = [
+    ...
+    AutomaticDelivery::class,
+];
+protected function schedule(Schedule $schedule){
+    ...
+    if (config('comment.automaticEvaluateState')) {    //是否开启自动好评
+        $schedule->command('automatic:evaluate')->everyMinute();
+    }
+}
+```
+
 ##### 开发指南
+
+###### 配置
+
+```shell
+# .env
+AUTOMATIC_EVALUATE_STATE=true   #是否开启自动评价功能
+AUTOMATIC_EVALUATE=12   #多少天后自动好评
+```
+
+
 
 ###### 增加评价统计代码
 
@@ -222,6 +250,8 @@ export default {
 #\app\Models\v1\GoodIndent.php
 const GOOD_INDENT_STATE_EVALUATE = 10; //状态：待评价
 const GOOD_INDENT_STATE_HAVE_EVALUATION = 11; //状态：已评价
+const GOOD_INDENT_IS_AUTOMATIC_EVALUATE_YES = 1; //自动好评：是
+const GOOD_INDENT_IS_AUTOMATIC_EVALUATE_NO = 0; //自动好评：否
 public function getStateShowAttribute()
 {
    ...
