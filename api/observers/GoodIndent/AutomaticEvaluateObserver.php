@@ -45,7 +45,7 @@ class AutomaticEvaluateObserver
                 $Comment->user_id = 0;
                 $Comment->model_id = $goodsList['id'];
                 $Comment->score = 5;
-                $Comment->model_type = 'App\Models\v1\GoodIndentCommodity';
+                $Comment->model_type = 'App\Models\v'.config('dswjcms.versions').'\GoodIndentCommodity';
                 $Comment->details = '系统默认好评';
                 $Comment->state = Comment::COMMENT_STATE_PASS;
                 $Comment->anonymity = Comment::COMMENT_ANONYMITY_NO;
